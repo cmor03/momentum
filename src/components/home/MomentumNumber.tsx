@@ -36,14 +36,18 @@ export default function MomentumNumber({ value }: { value: number }) {
     prevCount.current = todayCount;
   }, [todayCount, reduced, scale]);
 
+  const shimmer = value >= 85 && !reduced;
+
   return (
     <div className="relative flex flex-col items-center">
       <motion.span
         aria-label={`Momentum ${Math.round(value)}`}
-        className="font-display text-[9rem] leading-[0.95] tracking-tight tabular-nums"
+        className={`font-display text-[9rem] leading-[0.95] tracking-tight tabular-nums ${
+          shimmer ? 'momentum-shimmer' : ''
+        }`}
         style={{
           scale: reduced ? 1 : scaleSpring,
-          color: 'oklch(0.92 0.055 var(--momentum-hue))',
+          ...(shimmer ? {} : { color: 'oklch(0.92 0.055 var(--momentum-hue))' }),
           fontVariationSettings: '"opsz" 144',
         }}
       >

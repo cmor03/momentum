@@ -1,7 +1,9 @@
 # Momentum
 
 A burnout-proof consistency tracker. One number (0–100) that can dip but can
-never break, reset, or shame you. No streaks. Nothing red. Nothing to lose.
+never break, reset, or shame you. No streaks. No alarms. Nothing to lose.
+The interface warms from a soft ember through indigo and teal to gold as the
+number climbs, shimmering quietly at the top.
 
 ## How it works
 

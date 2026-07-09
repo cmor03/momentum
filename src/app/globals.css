@@ -27,9 +27,10 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* The momentum hue: 230 (deep indigo) at 0 → 85 (warm gold) at 100.
-   Set by MomentumNumber; consumed by the ambient field, the number itself,
-   and the sparklines. Never reaches red. Registered so changes glide. */
+/* The momentum hue: warm gold (85) at 100 → deep indigo (230) at 25 →
+   a soft ember red (380 ≡ 20) at 0. Set by Providers; consumed by the
+   ambient field, the number, the slot halos, and the sparklines.
+   Registered so changes glide. */
 @property --momentum-hue {
   syntax: "<number>";
   inherits: true;
@@ -45,4 +46,30 @@ body {
   :root {
     transition: none;
   }
+}
+
+/* High-momentum shimmer: a slow luminance ripple through the number's
+   glyphs, like light on water. Applied only at momentum >= 85 and never
+   under prefers-reduced-motion (gated in MomentumNumber). */
+@keyframes momentum-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.momentum-shimmer {
+  background-image: linear-gradient(
+    105deg,
+    oklch(0.88 0.055 var(--momentum-hue)) 42%,
+    oklch(0.98 0.04 var(--momentum-hue)) 50%,
+    oklch(0.88 0.055 var(--momentum-hue)) 58%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: momentum-shimmer 6.5s ease-in-out infinite;
 }

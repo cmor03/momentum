@@ -5,8 +5,13 @@ import AuthGate from './AuthGate';
 import { createClient } from '@/lib/supabase/client';
 import { selectMomentum, useAppStore } from '@/store/useAppStore';
 
-/** 0 → deep indigo (230), 100 → warm gold (85). Never red. */
-export const hueFor = (value: number) => 230 - value * 1.45;
+/**
+ * The momentum hue. 100 → warm gold (85), 25 → deep indigo (230), and below
+ * 25 the ramp keeps cooling past indigo through violet into a soft ember red
+ * at 0 (380 ≡ 20). Piecewise-continuous, so the color always glides.
+ */
+export const hueFor = (value: number) =>
+  value >= 25 ? 230 - ((value - 25) / 75) * 145 : 230 + ((25 - value) / 25) * 150;
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const booted = useRef(false);
