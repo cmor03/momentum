@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Night-sky neutrals with a faint violet cast — never pure black. */
+  --color-bg: oklch(0.155 0.018 275);
+  --color-surface: oklch(0.195 0.02 275);
+  --color-surface-raised: oklch(0.235 0.022 275);
+  --color-line: oklch(0.3 0.02 275);
+  --color-ink: oklch(0.93 0.012 85);
+  --color-ink-dim: oklch(0.6 0.018 275);
+  --color-ink-faint: oklch(0.42 0.018 275);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-instrument), system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-bg);
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* The momentum hue: 230 (deep indigo) at 0 → 85 (warm gold) at 100.
+   Set by MomentumNumber; consumed by the ambient field, the number itself,
+   and the sparklines. Never reaches red. Registered so changes glide. */
+@property --momentum-hue {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 230;
+}
+
+:root {
+  --momentum-hue: 230;
+  transition: --momentum-hue 1.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
 }

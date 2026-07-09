@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Momentum
 
-## Getting Started
+A burnout-proof consistency tracker. One number (0–100) that can dip but can
+never break, reset, or shame you. No streaks. Nothing red. Nothing to lose.
 
-First, run the development server:
+## How it works
 
-```bash
+- **Momentum** — `tomorrow = 0.92 × today + 0.08 × completion`. Computed once
+  per day rollover in your timezone from stored daily snapshots
+  (`src/lib/momentum.ts`). New accounts start at 50. Empty days decay gently
+  and are always recoverable.
+- **Buckets** — five areas with weekly targets; each shows a trailing 7-day
+  fill bar that self-heals as you log.
+- **Three slots a day** — max 3 logs per day across all buckets, enforced in
+  the app and by a `UNIQUE (user_id, logged_on, slot)` constraint. 3/3 is a
+  100% day. The app celebrates it once and never asks for more.
+
+## Architecture
+
+Client-rendered SPA in Next.js clothes. IndexedDB is the source of truth the
+UI renders from; Supabase is a sync target. Writes append to an outbox that
+drains when online (`src/lib/sync.ts`); pulls replace local data only when the
+outbox is empty. All IDs are client-generated UUIDs so sync is idempotent.
+The Serwist service worker precaches the three page shells, so the app opens
+and works fully offline.
+
+The Supabase project is shared with other apps: all tables are prefixed
+`momentum_`, the migration is strictly additive, and there are no triggers on
+`auth.users` (default buckets are seeded app-side on first sign-in).
+
+## Development
+
+```sh
+npm install
+cp .env.example .env.local   # fill in Supabase URL + anon key
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Apply the schema (Supabase CLI, linked project):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db query --linked -f supabase/migrations/0001_momentum_schema.sql
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tests cover the momentum math, timezone/date handling, and slot assignment:
 
-## Learn More
+```sh
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sh
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Then add `https://YOUR_DOMAIN/auth/callback` to the Supabase auth redirect
+allowlist (Authentication → URL Configuration) so magic links land back in
+the app.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Production builds use webpack (`next build --webpack`) because the Serwist
+service-worker plugin doesn't support Turbopack yet; dev runs plain Turbopack
+with no service worker.
