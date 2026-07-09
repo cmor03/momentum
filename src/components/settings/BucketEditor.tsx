@@ -51,7 +51,7 @@ export default function BucketEditor({ bucket }: { bucket: Bucket }) {
           </button>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         {BUCKET_COLORS.map((color) => (
           <button
             key={color}
@@ -66,6 +66,12 @@ export default function BucketEditor({ bucket }: { bucket: Bucket }) {
             }}
           />
         ))}
+        <button
+          onClick={() => void saveBucket({ ...bucket, archived: true })}
+          className="ml-auto text-xs text-ink-faint transition-colors hover:text-ink-dim"
+        >
+          Archive
+        </button>
       </div>
     </div>
   );

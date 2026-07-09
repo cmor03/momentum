@@ -117,7 +117,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     // …genuinely new account: seed the five defaults locally and push.
-    const seed = buildSeed(userId, detectTimezone());
+    const seed = await buildSeed(userId, detectTimezone());
     await idb.putProfile(seed.profile);
     for (const b of seed.buckets) await idb.putBucket(b);
     await idb.enqueue({ kind: 'seed', profile: seed.profile, buckets: seed.buckets });

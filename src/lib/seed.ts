@@ -27,14 +27,33 @@ export const DEFAULT_BUCKETS: Array<
   { name: 'People', color: BUCKET_COLORS[4], weeklyTarget: 2, sortOrder: 4 },
 ];
 
-export function buildSeed(userId: string, timezone: string): { profile: Profile; buckets: Bucket[] } {
+/**
+ * Deterministic per-user bucket id. Two devices (or tabs) seeding
+ * concurrently produce byte-identical rows, so the server's primary key
+ * dedupes them — a random id here once caused a full duplicate seed set.
+ */
+async function seedBucketId(userId: string, sortOrder: number): Promise<string> {
+  const data = new TextEncoder().encode(`momentum-seed:${userId}:${sortOrder}`);
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+  hash[6] = (hash[6] & 0x0f) | 0x40; // uuid v4 shape
+  hash[8] = (hash[8] & 0x3f) | 0x80;
+  const hex = Array.from(hash.slice(0, 16), (b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+export async function buildSeed(
+  userId: string,
+  timezone: string,
+): Promise<{ profile: Profile; buckets: Bucket[] }> {
   return {
     profile: { userId, timezone, createdAt: new Date().toISOString() },
-    buckets: DEFAULT_BUCKETS.map((b) => ({
-      ...b,
-      id: crypto.randomUUID(),
-      userId,
-      archived: false,
-    })),
+    buckets: await Promise.all(
+      DEFAULT_BUCKETS.map(async (b) => ({
+        ...b,
+        id: await seedBucketId(userId, b.sortOrder),
+        userId,
+        archived: false,
+      })),
+    ),
   };
 }
